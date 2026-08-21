@@ -1,14 +1,24 @@
 /*
- * ai.js — Gemini AI integration for the dashboard.
- * The browser sends data to a local backend endpoint only.
+ * ai.js - Gemini AI integration for the dashboard.
+ * The browser sends dashboard data to the backend endpoint only.
  */
 
 (() => {
-  const GEMINI_LOADING_TEXT = 'Gemini กำลังวิเคราะห์ข้อมูล...';
+  const MODEL_NAME = 'Gemini 3.6 Flash';
+  const MODEL_ID = 'gemini-3.6-flash';
 
   function clampRange(value, fallback) {
     const n = Number.parseInt(value, 10);
     return Number.isNaN(n) ? fallback : n;
+  }
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
   }
 
   function getSelectedYears() {
@@ -27,19 +37,15 @@
     const months = Array.isArray(DataStore?.MONTHS_TH) ? DataStore.MONTHS_TH : [];
     const start = clampRange(window.state?.monthStart, 0);
     const end = clampRange(window.state?.monthEnd, months.length - 1);
-    const s = Math.min(start, end);
-    const e = Math.max(start, end);
-    return months.slice(s, e + 1);
+    return months.slice(Math.min(start, end), Math.max(start, end) + 1);
   }
 
   function buildFuelSeries(prodKey, consKey) {
     const years = getSelectedYears();
-    const { monthStart, monthEnd } = window.state || {};
-    const start = clampRange(monthStart, 0);
-    const end = clampRange(monthEnd, 11);
+    const start = clampRange(window.state?.monthStart, 0);
+    const end = clampRange(window.state?.monthEnd, 11);
     const startIndex = Math.min(start, end);
     const endIndex = Math.max(start, end);
-
     const production = [];
     const consumption = [];
     const supplyGap = [];
@@ -47,7 +53,7 @@
     years.forEach((year) => {
       const prodRow = DataStore.RAW_DATA[prodKey]?.[year] || [];
       const consRow = DataStore.RAW_DATA[consKey]?.[year] || [];
-      for (let i = startIndex; i <= endIndex; i++) {
+      for (let i = startIndex; i <= endIndex; i += 1) {
         const p = prodRow[i];
         const c = consRow[i];
         production.push({ year, monthIndex: i, value: p });
@@ -61,9 +67,8 @@
 
   function getCurrentKpiValues() {
     const years = getSelectedYears();
-    const { monthStart, monthEnd } = window.state || {};
-    const start = clampRange(monthStart, 0);
-    const end = clampRange(monthEnd, 11);
+    const start = clampRange(window.state?.monthStart, 0);
+    const end = clampRange(window.state?.monthEnd, 11);
     const startIndex = Math.min(start, end);
     const endIndex = Math.max(start, end);
 
@@ -76,7 +81,7 @@
       years.forEach((year) => {
         const prodRow = DataStore.RAW_DATA[prodKey]?.[year] || [];
         const consRow = DataStore.RAW_DATA[consKey]?.[year] || [];
-        for (let i = startIndex; i <= endIndex; i++) {
+        for (let i = startIndex; i <= endIndex; i += 1) {
           const p = prodRow[i];
           const c = consRow[i];
           if (p !== null && p !== undefined) {
@@ -93,13 +98,13 @@
       return {
         production: pCount ? totalProd / pCount : null,
         consumption: cCount ? totalCons / cCount : null,
-        supplyGap: (pCount && cCount) ? (totalProd / pCount) - (totalCons / cCount) : null,
+        supplyGap: pCount && cCount ? (totalProd / pCount) - (totalCons / cCount) : null,
       };
     };
 
     return {
       ethanol: avgForFuel('ethanol_production', 'ethanol_consumption'),
-      biodiesel: avgForFuel('biodiesel_production', 'biodiesel_consumption')
+      biodiesel: avgForFuel('biodiesel_production', 'biodiesel_consumption'),
     };
   }
 
@@ -110,7 +115,6 @@
     const yearEnd = window.state?.yearEnd || DataStore.YEARS[DataStore.YEARS.length - 1];
     const monthStart = window.state?.monthStart || '0';
     const monthEnd = window.state?.monthEnd || '11';
-
     const ethanol = buildFuelSeries('ethanol_production', 'ethanol_consumption');
     const biodiesel = buildFuelSeries('biodiesel_production', 'biodiesel_consumption');
     const kpis = getCurrentKpiValues();
@@ -124,204 +128,167 @@
         selectedYears,
         selectedMonths,
       },
-      ethanol: {
-        production: ethanol.production,
-        consumption: ethanol.consumption,
-        supplyGap: ethanol.supplyGap,
-      },
-      biodiesel: {
-        production: biodiesel.production,
-        consumption: biodiesel.consumption,
-        supplyGap: biodiesel.supplyGap,
-      },
-      kpis: {
-        ethanol: {
-          production: kpis.ethanol.production,
-          consumption: kpis.ethanol.consumption,
-          supplyGap: kpis.ethanol.supplyGap,
-        },
-        biodiesel: {
-          production: kpis.biodiesel.production,
-          consumption: kpis.biodiesel.consumption,
-          supplyGap: kpis.biodiesel.supplyGap,
-        },
-      },
-    };
-  }
-
-  function analyzeDashboardData(data, filters = {}) {
-    const years = Array.isArray(data?.filters?.selectedYears) && data.filters.selectedYears.length
-      ? data.filters.selectedYears
-      : getSelectedYears();
-
-    if (!years.length) {
-      return {
-        summary: 'ไม่พบข้อมูลในช่วงที่เลือก',
-        productionTrend: 'ไม่สามารถสรุปแนวโน้มการผลิตได้จากช่วงข้อมูลที่เลือก',
-        consumptionTrend: 'ไม่สามารถสรุปแนวโน้มการใช้ได้จากช่วงข้อมูลที่เลือก',
-        supplyGap: 'ไม่สามารถประเมิน Supply Gap ได้จากช่วงข้อมูลที่เลือก',
-        highest: 'ไม่มีข้อมูลที่เพียงพอ',
-        lowest: 'ไม่มีข้อมูลที่เพียงพอ',
-        attention: ['ข้อมูลที่เลือกไม่เพียงพอสำหรับการวิเคราะห์'],
-      };
-    }
-
-    const buildText = (label, value) => `${label}: ${Number.isFinite(value) ? value.toFixed(3) : '—'}`;
-    const ethProd = data.ethanol?.production || [];
-    const ethCons = data.ethanol?.consumption || [];
-    const bioProd = data.biodiesel?.production || [];
-    const bioCons = data.biodiesel?.consumption || [];
-
-    const getNumericValues = (series) => series
-      .map((item) => Number(item?.value))
-      .filter((value) => Number.isFinite(value));
-
-    const ethProdValues = getNumericValues(ethProd);
-    const ethConsValues = getNumericValues(ethCons);
-    const bioProdValues = getNumericValues(bioProd);
-    const bioConsValues = getNumericValues(bioCons);
-
-    const highestEth = Math.max(...ethProdValues, 0);
-    const lowestEth = Math.min(...ethProdValues, 0);
-    const highestBio = Math.max(...bioProdValues, 0);
-    const lowestBio = Math.min(...bioProdValues, 0);
-
-    return {
-      summary: [
-        `ช่วงข้อมูล ${filters.yearStart || data.filters?.yearStart || years[0]}–${filters.yearEnd || data.filters?.yearEnd || years[years.length - 1]} · ${filters.monthStart || data.filters?.monthStart || 'ม.ค.'}–${filters.monthEnd || data.filters?.monthEnd || 'ธ.ค.'}`,
-        `เอทานอลมีค่าเฉลี่ยการผลิต ${ethProdValues.length ? (ethProdValues.reduce((sum, v) => sum + v, 0) / ethProdValues.length).toFixed(3) : '—'} ล้านลิตร/วัน และค่าเฉลี่ยการใช้ ${ethConsValues.length ? (ethConsValues.reduce((sum, v) => sum + v, 0) / ethConsValues.length).toFixed(3) : '—'} ล้านลิตร/วัน`,
-        `ไบโอดีเซลมีค่าเฉลี่ยการผลิต ${bioProdValues.length ? (bioProdValues.reduce((sum, v) => sum + v, 0) / bioProdValues.length).toFixed(3) : '—'} ล้านลิตร/วัน และค่าเฉลี่ยการใช้ ${bioConsValues.length ? (bioConsValues.reduce((sum, v) => sum + v, 0) / bioConsValues.length).toFixed(3) : '—'} ล้านลิตร/วัน`,
-      ].join(' '),
-      productionTrend: `แนวโน้มการผลิตระหว่าง ${years[0]}–${years[years.length - 1]} แสดงให้เห็นว่าเอทานอลมีช่วงผลิตสูงสุด ${highestEth.toFixed(3)} และไบโอดีเซลมีช่วงผลิตสูงสุด ${highestBio.toFixed(3)} ล้านลิตร/วัน`,
-      consumptionTrend: `แนวโน้มการใช้ระหว่าง ${years[0]}–${years[years.length - 1]} แสดงถึงอัตราการใช้ที่สูงสุดในเอทานอล ${Math.max(...ethConsValues, 0).toFixed(3)} และไบโอดีเซล ${Math.max(...bioConsValues, 0).toFixed(3)} ล้านลิตร/วัน`,
-      supplyGap: `Supply Gap ยังคงมีความแตกต่างระหว่างการผลิตกับการใช้ โดยเอทานอล ${((highestEth - Math.max(...ethConsValues, 0))).toFixed(3)} และไบโอดีเซล ${((highestBio - Math.max(...bioConsValues, 0))).toFixed(3)} ล้านลิตร/วัน`,
-      highest: `เอทานอลสูงสุด ${highestEth.toFixed(3)} · ไบโอดีเซลสูงสุด ${highestBio.toFixed(3)} ล้านลิตร/วัน`,
-      lowest: `เอทานอลต่ำสุด ${lowestEth.toFixed(3)} · ไบโอดีเซลต่ำสุด ${lowestBio.toFixed(3)} ล้านลิตร/วัน`,
-      attention: [
-        'ตรวจสอบความผันผวนของการผลิตเมื่อมีการเปลี่ยนแปลงของสภาวะตลาด',
-        'เฝ้าติดตาม Supply Gap ของทั้งสองประเภท เพื่อป้องกันความไม่สมดุลระหว่างอุปทานและอุปสงค์',
-      ],
+      ethanol,
+      biodiesel,
+      kpis,
+      rangeLabel: `${yearStart}-${yearEnd} · ${selectedMonths[0]}-${selectedMonths[selectedMonths.length - 1]}`,
     };
   }
 
   async function requestAIAnalysis(payload) {
     const response = await fetch('/api/gemini', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
 
     if (!response.ok) {
       const errorPayload = await response.json().catch(() => ({}));
-      throw new Error(errorPayload.error || 'ไม่สามารถวิเคราะห์ข้อมูลได้');
+      throw new Error(errorPayload.error || 'AI request failed');
     }
 
     return response.json();
+  }
+
+  function renderFilterContext(payload) {
+    const content = document.getElementById('aiModalContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="ai-panel-start">
+        <div class="ai-context-card">
+          <div class="ai-context-title"><i class="fa-solid fa-chart-simple"></i> ข้อมูลที่กำลังวิเคราะห์</div>
+          <div class="ai-context-grid">
+            <div class="ai-context-item">
+              <span class="ai-context-icon"><i class="fa-regular fa-calendar"></i></span>
+              <div class="ai-context-text"><span>ช่วงปี</span><strong>${escapeHtml(payload.filters.yearStart)}-${escapeHtml(payload.filters.yearEnd)}</strong></div>
+            </div>
+            <div class="ai-context-item">
+              <span class="ai-context-icon"><i class="fa-regular fa-clock"></i></span>
+              <div class="ai-context-text"><span>ช่วงเดือน</span><strong>${escapeHtml(payload.filters.selectedMonths[0])}-${escapeHtml(payload.filters.selectedMonths[payload.filters.selectedMonths.length - 1])}</strong></div>
+            </div>
+            <div class="ai-context-item">
+              <span class="ai-context-icon"><i class="fa-solid fa-flask"></i></span>
+              <div class="ai-context-text"><span>ข้อมูล</span><strong>Ethanol + Biodiesel</strong></div>
+            </div>
+          </div>
+        </div>
+        <button class="ai-run-btn" id="aiRunBtn" type="button"><span class="ai-run-icon">✦</span> วิเคราะห์ข้อมูล</button>
+      </div>
+    `;
+
+    document.getElementById('aiRunBtn')?.addEventListener('click', () => runAiAnalysis(payload));
+  }
+
+  function renderAiLoading(payload) {
+    const content = document.getElementById('aiModalContent');
+    if (!content) return;
+
+    content.innerHTML = `
+      <div class="ai-context-card ai-context-card--compact">
+        <div class="ai-context-title"><i class="fa-solid fa-chart-simple"></i> ${escapeHtml(payload.rangeLabel)}</div>
+        <div class="ai-context-note">Ethanol + Biodiesel</div>
+      </div>
+      <div class="ai-loading-card">
+        <span class="ai-loading-orbit" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="34" height="34">
+            <path fill="currentColor" d="M12 2c0 5.523-4.477 10-10 10 5.523 0 10 4.477 10 10 0-5.523 4.477-10 10-10-5.523 0-10-4.477-10-10z"/>
+          </svg>
+        </span>
+        <strong>Gemini กำลังวิเคราะห์ข้อมูล Dashboard...</strong>
+        <span>กำลังตรวจสอบแนวโน้มการผลิตและการใช้</span>
+        <div class="ai-loading-dots"><i></i><i></i><i></i></div>
+      </div>
+    `;
   }
 
   function renderAiResult(result) {
     const content = document.getElementById('aiModalContent');
     if (!content) return;
 
-    const summary = result?.summary || 'ไม่มีสรุปข้อมูล';
-    const productionTrend = result?.productionTrend || 'ไม่มีข้อมูลแนวโน้มการผลิต';
-    const consumptionTrend = result?.consumptionTrend || 'ไม่มีข้อมูลแนวโน้มการใช้';
-    const supplyGap = result?.supplyGap || 'ไม่มีข้อมูล Supply Gap';
-    const highest = result?.highest || 'ไม่มีข้อมูล';
-    const lowest = result?.lowest || 'ไม่มีข้อมูล';
-    const attention = Array.isArray(result?.attention) && result.attention.length ? result.attention : ['ไม่มีข้อมูลจุดที่ควรจับตามอง'];
+    const sections = [
+      ['insight', 'fa-lightbulb', 'ภาพรวม', result?.summary || 'ไม่มีสรุปข้อมูล'],
+      ['production', 'fa-arrow-trend-up', 'แนวโน้มการผลิต', result?.productionTrend || 'ไม่มีข้อมูลแนวโน้มการผลิต'],
+      ['consumption', 'fa-chart-column', 'แนวโน้มการใช้', result?.consumptionTrend || 'ไม่มีข้อมูลแนวโน้มการใช้'],
+      ['gap', 'fa-scale-balanced', 'Supply Gap', result?.supplyGap || 'ไม่มีข้อมูล Supply Gap'],
+      ['high', 'fa-trophy', 'ค่าสูงสุด', result?.highest || 'ไม่มีข้อมูล'],
+      ['low', 'fa-arrow-trend-down', 'ค่าต่ำสุด', result?.lowest || 'ไม่มีข้อมูล'],
+    ];
+    const attention = Array.isArray(result?.attention) && result.attention.length
+      ? result.attention
+      : ['ไม่มีข้อมูลจุดที่ควรจับตามอง'];
 
     content.innerHTML = `
       <div class="ai-result-block">
-        <div class="ai-range-pill"><i class="fa-solid fa-calendar-days"></i> ${result?.rangeLabel || 'ช่วงข้อมูลที่เลือก'}</div>
-
-        <div class="ai-section">
-          <div class="ai-section-head"><span>💡</span> ภาพรวม</div>
-          <div class="ai-section-body">${summary}</div>
+        <div class="ai-quick-insight">
+          <div class="ai-quick-top">
+            <span class="ai-quick-icon">✨</span>
+            <span class="ai-quick-label">Quick Insight</span>
+          </div>
+          <strong>${escapeHtml(result?.summary || 'วิเคราะห์ข้อมูล Dashboard สำเร็จ')}</strong>
+          <div class="ai-range-pill"><i class="fa-solid fa-calendar-days"></i> ${escapeHtml(result?.rangeLabel || 'ช่วงข้อมูลที่เลือก')}</div>
         </div>
-
-        <div class="ai-section">
-          <div class="ai-section-head"><span>📈</span> แนวโน้มการผลิต</div>
-          <div class="ai-section-body">${productionTrend}</div>
-        </div>
-
-        <div class="ai-section">
-          <div class="ai-section-head"><span>📊</span> แนวโน้มการใช้</div>
-          <div class="ai-section-body">${consumptionTrend}</div>
-        </div>
-
-        <div class="ai-section">
-          <div class="ai-section-head"><span>⚖️</span> Supply Gap</div>
-          <div class="ai-section-body">${supplyGap}</div>
-        </div>
-
-        <div class="ai-section">
-          <div class="ai-section-head"><span>🏆</span> ค่าสูงสุด</div>
-          <div class="ai-section-body">${highest}</div>
-        </div>
-
-        <div class="ai-section">
-          <div class="ai-section-head"><span>📉</span> ค่าต่ำสุด</div>
-          <div class="ai-section-body">${lowest}</div>
-        </div>
-
-        <div class="ai-section">
-          <div class="ai-section-head"><span>⚠️</span> จุดที่ควรจับตามอง</div>
-          <div class="ai-section-body">${attention.map((item) => `<div>• ${item}</div>`).join('')}</div>
+        ${sections.map(([tone, icon, title, body]) => `
+          <div class="ai-section ai-section--${tone}">
+            <div class="ai-section-head"><span class="ai-section-icon"><i class="fa-solid ${icon}"></i></span> ${escapeHtml(title)}</div>
+            <div class="ai-section-body">${escapeHtml(body)}</div>
+          </div>
+        `).join('')}
+        <div class="ai-section ai-section--warn">
+          <div class="ai-section-head"><span class="ai-section-icon"><i class="fa-solid fa-triangle-exclamation"></i></span> จุดที่ควรจับตามอง</div>
+          <div class="ai-section-body ai-attention-list">${attention.map((item) => `<div class="ai-attention-item">${escapeHtml(item)}</div>`).join('')}</div>
         </div>
       </div>
     `;
   }
 
-  function renderAiError(message = 'ไม่สามารถวิเคราะห์ข้อมูลได้ในขณะนี้') {
+  function renderAiError() {
     const content = document.getElementById('aiModalContent');
     if (!content) return;
 
     content.innerHTML = `
       <div class="ai-error">
-        <div class="ai-error-box"><i class="fa-solid fa-triangle-exclamation"></i> ${message}</div>
+        <div class="ai-error-box">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <div>
+            <strong>ไม่สามารถเชื่อมต่อ Gemini ได้</strong>
+            <span>ไม่สามารถรับผลการวิเคราะห์จาก AI ได้ในขณะนี้</span>
+          </div>
+        </div>
         <button class="ai-retry-btn" type="button" id="aiRetryBtn">ลองอีกครั้ง</button>
+        <p class="ai-error-hint">ตรวจสอบการเชื่อมต่อ Internet หรือ Backend API</p>
       </div>
     `;
 
-    const retry = document.getElementById('aiRetryBtn');
-    if (retry) {
-      retry.addEventListener('click', openAiModal);
-    }
+    document.getElementById('aiRetryBtn')?.addEventListener('click', () => {
+      runAiAnalysis(buildAIRequestPayload());
+    });
+  }
+
+  function runAiAnalysis(payload) {
+    renderAiLoading(payload);
+    requestAIAnalysis(payload)
+      .then((result) => renderAiResult({ ...result, rangeLabel: payload.rangeLabel }))
+      .catch(() => renderAiError());
   }
 
   function openAiModal() {
     const overlay = document.getElementById('aiModalOverlay');
-    const content = document.getElementById('aiModalContent');
-    if (!overlay || !content) return;
-
+    const btn = document.getElementById('aiAnalysisBtn');
+    if (!overlay) return;
     overlay.classList.add('is-open');
     overlay.setAttribute('aria-hidden', 'false');
-    content.innerHTML = `<div class="ai-loading"><span class="ai-loading-spinner"></span><span>${GEMINI_LOADING_TEXT}</span></div>`;
-
-    const payload = buildAIRequestPayload();
-    payload.rangeLabel = `${payload.filters.yearStart}–${payload.filters.yearEnd} · ${payload.filters.selectedMonths[0]}–${payload.filters.selectedMonths[payload.filters.selectedMonths.length - 1]}`;
-
-    requestAIAnalysis(payload)
-      .then((result) => {
-        const normalized = {
-          ...result,
-          rangeLabel: payload.rangeLabel,
-        };
-        renderAiResult(normalized);
-      })
-      .catch((error) => {
-        renderAiError(error.message || 'ไม่สามารถวิเคราะห์ข้อมูลได้ในขณะนี้');
-      });
+    btn?.classList.add('is-active');
+    renderFilterContext(buildAIRequestPayload());
   }
 
   function closeAiModal() {
     const overlay = document.getElementById('aiModalOverlay');
+    const btn = document.getElementById('aiAnalysisBtn');
     if (!overlay) return;
     overlay.classList.remove('is-open');
     overlay.setAttribute('aria-hidden', 'true');
+    btn?.classList.remove('is-active');
   }
 
   function bindAiButton() {
@@ -329,16 +296,14 @@
     const closeBtn = document.getElementById('aiModalClose');
     const overlay = document.getElementById('aiModalOverlay');
 
-    if (btn) btn.addEventListener('click', openAiModal);
-    if (closeBtn) closeBtn.addEventListener('click', closeAiModal);
-    if (overlay) {
-      overlay.addEventListener('click', (event) => {
-        if (event.target === overlay) closeAiModal();
-      });
-    }
+    btn?.addEventListener('click', openAiModal);
+    closeBtn?.addEventListener('click', closeAiModal);
+    overlay?.addEventListener('click', (event) => {
+      if (event.target === overlay) closeAiModal();
+    });
 
     document.addEventListener('keydown', (event) => {
-      if (event.key === 'Escape' && overlay && overlay.classList.contains('is-open')) {
+      if (event.key === 'Escape' && overlay?.classList.contains('is-open')) {
         closeAiModal();
       }
     });
@@ -346,11 +311,7 @@
 
   function bootstrap() {
     if (typeof DataStore === 'undefined') return;
-    if (typeof window !== 'undefined') {
-      window.state = window.state || {};
-      window.analyzeDashboardData = analyzeDashboardData;
-      window.requestAIAnalysis = requestAIAnalysis;
-    }
+    window.requestAIAnalysis = requestAIAnalysis;
     bindAiButton();
   }
 
