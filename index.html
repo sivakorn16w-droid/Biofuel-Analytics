@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>แดชบอร์ดวิเคราะห์เชื้อเพลิงชีวภาพไทย</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ============================= แถบด้านข้าง ============================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark"><i class="fa-solid fa-leaf"></i></div>
+      <div class="brand-text">
+        <div class="brand-title">Biofuel Analytics</div>
+        <div class="brand-sub">สนพ. · ประเทศไทย</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="nav-section-label">เมนูหลัก</div>
+      <ul class="nav-list">
+        <li><a class="nav-item nav-item--active" href="#top" onclick="var t=document.getElementById('sidebarToggle'); if(t) t.checked=false;"><i class="fa-solid fa-gauge-high"></i><span>แดชบอร์ด</span></a></li>
+        <li><a class="nav-item" href="#section-fuels" onclick="var t=document.getElementById('sidebarToggle'); if(t) t.checked=false;"><i class="fa-solid fa-flask"></i><span>ภาพรวมสองฝั่ง</span></a></li>
+        <li><a class="nav-item" href="#section-table" onclick="var t=document.getElementById('sidebarToggle'); if(t) t.checked=false;"><i class="fa-solid fa-table-list"></i><span>ข้อมูลรายเดือน</span></a></li>
+      </ul>
+    </div>
+
+    <div class="sidebar-divider"></div>
+
+    <button class="ai-analysis-btn" id="aiAnalysisBtn" type="button" aria-label="Gemini AI วิเคราะห์ข้อมูล">
+      <span class="ai-analysis-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="32" height="32" class="gemini-mark">
+          <defs>
+            <linearGradient id="geminiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#4285F4"/>
+              <stop offset="35%" stop-color="#9B72CB"/>
+              <stop offset="70%" stop-color="#D96BA8"/>
+              <stop offset="100%" stop-color="#4FC3F7"/>
+            </linearGradient>
+          </defs>
+          <path fill="url(#geminiGrad)" d="M12 2c0 5.523-4.477 10-10 10 5.523 0 10 4.477 10 10 0-5.523 4.477-10 10-10-5.523 0-10-4.477-10-10z"/>
+        </svg>
+      </span>
+      <span class="ai-analysis-copy">
+        <span class="ai-analysis-title-row">
+          <span class="ai-analysis-title">Gemini AI</span>
+          <span class="ai-badge">Flash</span>
+        </span>
+        <span class="ai-analysis-sub">วิเคราะห์ข้อมูลและหา Insight</span>
+      </span>
+    </button>
+
+    <section class="global-filter-bar" id="globalFilterBar">
+      <div class="gfb-label"><i class="fa-solid fa-filter"></i> ตัวกรองข้อมูล</div>
+      <div class="gfb-controls">
+        <div class="range-block">
+          <div class="range-block-label">ช่วงปี</div>
+          <div class="range-selects">
+            <select class="gfb-select" id="filterYearStart" aria-label="ปีเริ่มต้น"></select>
+            <span class="range-sep">ถึง</span>
+            <select class="gfb-select" id="filterYearEnd" aria-label="ปีสิ้นสุด"></select>
+          </div>
+        </div>
+        <div class="range-block">
+          <div class="range-block-label">ช่วงเดือน</div>
+          <div class="range-selects">
+            <select class="gfb-select" id="filterMonthStart" aria-label="เดือนเริ่มต้น"></select>
+            <span class="range-sep">ถึง</span>
+            <select class="gfb-select" id="filterMonthEnd" aria-label="เดือนสิ้นสุด"></select>
+          </div>
+        </div>
+        <button class="gfb-reset-btn" id="resetFilters" title="ล้างตัวกรอง"><i class="fa-solid fa-rotate-left"></i> ล้างตัวกรอง</button>
+      </div>
+    </section>
+  </aside>
+  <label for="sidebarToggle" class="sidebar-overlay" aria-hidden="true"></label>
+
+  <!-- ============================= แถบบน ============================= -->
+  <header class="topbar">
+    <input type="checkbox" id="sidebarToggle" class="sidebar-toggle-input" aria-hidden="true">
+    <label for="sidebarToggle" class="sidebar-toggle-btn" title="เมนู / ตัวกรอง"><i class="fa-solid fa-bars"></i></label>
+    <div class="topbar-brand"><i class="fa-solid fa-leaf"></i> Biofuel Analytics</div>
+    <div class="topbar-right">
+      <a class="topbar-btn topbar-btn--value-chain" href="https://oil.wachasan-j.workers.dev/" target="_blank" rel="noopener noreferrer" title="เปิด Value Chain"><i class="fa-solid fa-link"></i> <span>Value Chain</span></a>
+      <button class="topbar-btn" id="exportDashboardBtn" type="button" title="ดาวน์โหลดภาพแดชบอร์ด"><i class="fa-solid fa-file-arrow-down"></i> <span>Export PNG</span></button>
+      <button class="topbar-btn" id="fullscreenBtn" title="เต็มหน้าจอ"><i class="fa-solid fa-expand"></i> <span>Fullscreen</span></button>
+      <label class="theme-switch" title="สลับโหมดสว่าง/มืด">
+        <input type="checkbox" id="themeSwitch">
+        <span class="ts-track"></span>
+        <span class="ts-thumb"><i class="fa-solid fa-leaf"></i></span>
+      </label>
+    </div>
+  </header>
+
+  <!-- ============================= เนื้อหาหลัก ============================= -->
+  <main class="main" id="top">
+
+    <!-- ========================= HERO / HEADER ========================= -->
+    <section class="hero">
+      <div>
+        <div class="hero-eyebrow"><i class="fa-solid fa-bolt"></i> สรุปภาพรวม</div>
+        <h1>แดชบอร์ดวิเคราะห์<span class="hero-title-accent">เชื้อเพลิงชีวภาพ</span></h1>
+        <p id="heroSubtitle"><span class="hero-fuel hero-fuel--eth">เอทานอล</span> และ <span class="hero-fuel hero-fuel--bio">ไบโอดีเซล (B100)</span> · สถิติไทย 2565–2569 · แสดงพร้อมกันในหน้าเดียว</p>
+        <div class="hero-period">
+          <span class="badge"><i class="fa-solid fa-check"></i> ข้อมูลจริง</span>
+          <span id="heroPeriod">ปีงบประมาณ 2565–2569</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= FUEL PANELS (vertical stack) ========================= -->
+    <section class="fuels-stack" id="section-fuels">
+
+      <!-- ============ ETHANOL ============ -->
+      <div class="fuel-panel" id="ethPanel" style="--accent:#2563EB">
+        <div class="fuel-panel-head">
+          <div class="fph-left">
+            <div class="fph-icon"><i class="fa-solid fa-flask"></i></div>
+            <div class="fph-text">
+              <h2>เอทานอล</h2>
+              <div class="fph-sub">Ethanol · <span id="ethCoverage">ชุดข้อมูล</span></div>
+            </div>
+          </div>
+          <div class="fph-kpis">
+            <div class="kpi-inline kpi-inline--prod">
+              <div class="kii-icon"><i class="fa-solid fa-chart-simple"></i></div>
+              <div class="kii-data">
+                <div class="kii-label">การผลิต</div>
+                <div class="kii-value" id="ethValProd">—<span class="unit">ล้านลิตร/วัน</span></div>
+                <div class="kii-subtext">เทียบเดือนก่อนหน้า</div>
+              </div>
+              <div class="kpi-trend pos" id="ethTrendProd"><i class="fa-solid fa-arrow-up"></i> <span>—</span></div>
+            </div>
+            <div class="kpi-inline kpi-inline--cons">
+              <div class="kii-icon"><i class="fa-solid fa-fire"></i></div>
+              <div class="kii-data">
+                <div class="kii-label">การใช้</div>
+                <div class="kii-value" id="ethValCons">—<span class="unit">ล้านลิตร/วัน</span></div>
+                <div class="kii-subtext">เทียบเดือนก่อนหน้า</div>
+              </div>
+              <div class="kpi-trend pos" id="ethTrendCons"><i class="fa-solid fa-arrow-up"></i> <span>—</span></div>
+            </div>
+            <div class="kpi-inline kpi-inline--diff">
+              <div class="kii-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+              <div class="kii-data">
+                <div class="kii-label">ส่วนต่าง</div>
+                <div class="kii-value" id="ethValDiff">—<span class="unit">ล้านลิตร/วัน</span></div>
+                <div class="kii-subtext">เทียบเดือนก่อนหน้า</div>
+              </div>
+              <div class="kpi-trend pos" id="ethTrendDiff"><i class="fa-solid fa-arrow-up"></i> <span>—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fuel-panel-body">
+          <!-- MAIN TREND CHART — Small Multiples -->
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <div class="cc-title"><i class="fa-solid fa-chart-line"></i> แนวโน้มการผลิตและการใช้เอทานอล</div>
+              <div class="chart-card-head-actions">
+                <button class="chart-expand-btn" data-expand="eth.main" type="button" aria-label="ขยายกราฟ" title="ขยายกราฟ"><i class="fa-solid fa-expand"></i></button>
+                <div class="chart-type-toggle" data-chart="eth.main">
+                  <button class="ctt-btn ctt-btn--active" data-type="line" type="button" aria-label="กราฟเส้น" title="กราฟเส้น"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></button>
+                  <button class="ctt-btn" data-type="bar" type="button" aria-label="กราฟแท่ง" title="กราฟแท่ง"><i class="fa-solid fa-chart-column" aria-hidden="true"></i></button>
+                </div>
+              </div>
+            </div>
+            <div class="cc-sub" id="ethChartSub">หน่วย: ล้านลิตร/วัน · รายเดือน</div>
+            <div class="year-pills" id="ethYearPills"></div>
+            <div class="chart-canvas chart-canvas--main">
+              <canvas id="ethMainChart"></canvas>
+            </div>
+          </div>
+
+          <!-- SECONDARY : Yearly + Monthly -->
+          <div class="fp-charts-2col">
+            <div class="chart-card">
+              <div class="chart-card-head">
+                <div class="cc-title"><i class="fa-solid fa-chart-column"></i> การผลิตรายปี vs การใช้รายปี</div>
+                <button class="chart-expand-btn" data-expand="eth.year" type="button" aria-label="ขยายกราฟ" title="ขยายกราฟ"><i class="fa-solid fa-expand"></i></button>
+              <div class="chart-type-toggle" data-chart="eth.year">
+                  <button class="ctt-btn" data-type="line" type="button" aria-label="กราฟเส้น" title="กราฟเส้น"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></button>
+                  <button class="ctt-btn ctt-btn--active" data-type="bar" type="button" aria-label="กราฟแท่ง" title="กราฟแท่ง"><i class="fa-solid fa-chart-column" aria-hidden="true"></i></button>
+                </div>
+              </div>
+              <div class="cc-sub">หน่วย: ล้านลิตร/วัน · เฉลี่ยตามช่วงเดือนที่เลือก</div>
+              <div class="chart-canvas" style="min-height:240px;">
+                <canvas id="ethYearChart"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-card-head">
+                <div class="cc-title"><i class="fa-solid fa-chart-simple"></i> ภาพรวมรายเดือนของช่วงปีที่เลือก</div>
+                <div class="cc-head-right">
+                  <select class="month-year-select" id="ethMonthYear" aria-label="เลือกปี"></select>
+                  <button class="chart-expand-btn" data-expand="eth.month" type="button" aria-label="ขยายกราฟ" title="ขยายกราฟ"><i class="fa-solid fa-expand"></i></button>
+              <div class="chart-type-toggle" data-chart="eth.month">
+                    <button class="ctt-btn" data-type="line" type="button" aria-label="กราฟเส้น" title="กราฟเส้น"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></button>
+                    <button class="ctt-btn ctt-btn--active" data-type="bar" type="button" aria-label="กราฟแท่ง" title="กราฟแท่ง"><i class="fa-solid fa-chart-column" aria-hidden="true"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="cc-sub" id="ethMonthSub">หน่วย: ล้านลิตร/วัน · เลือกปีได้</div>
+              <div class="chart-canvas" style="min-height:240px;">
+                <canvas id="ethMonthChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ BIODIESEL ============ -->
+      <div class="fuel-panel" id="bioPanel" style="--accent:#2E7D32">
+        <div class="fuel-panel-head">
+          <div class="fph-left">
+            <div class="fph-icon"><i class="fa-solid fa-droplet"></i></div>
+            <div class="fph-text">
+              <h2>ไบโอดีเซล (B100)</h2>
+              <div class="fph-sub">Biodiesel · <span id="bioCoverage">ชุดข้อมูล</span></div>
+            </div>
+          </div>
+          <div class="fph-kpis">
+            <div class="kpi-inline kpi-inline--prod">
+              <div class="kii-icon"><i class="fa-solid fa-chart-simple"></i></div>
+              <div class="kii-data">
+                <div class="kii-label">การผลิต</div>
+                <div class="kii-value" id="bioValProd">—<span class="unit">ล้านลิตร/วัน</span></div>
+                <div class="kii-subtext">เทียบเดือนก่อนหน้า</div>
+              </div>
+              <div class="kpi-trend pos" id="bioTrendProd"><i class="fa-solid fa-arrow-up"></i> <span>—</span></div>
+            </div>
+            <div class="kpi-inline kpi-inline--cons">
+              <div class="kii-icon"><i class="fa-solid fa-fire"></i></div>
+              <div class="kii-data">
+                <div class="kii-label">การใช้</div>
+                <div class="kii-value" id="bioValCons">—<span class="unit">ล้านลิตร/วัน</span></div>
+                <div class="kii-subtext">เทียบเดือนก่อนหน้า</div>
+              </div>
+              <div class="kpi-trend pos" id="bioTrendCons"><i class="fa-solid fa-arrow-up"></i> <span>—</span></div>
+            </div>
+            <div class="kpi-inline kpi-inline--diff">
+              <div class="kii-icon"><i class="fa-solid fa-scale-balanced"></i></div>
+              <div class="kii-data">
+                <div class="kii-label">ส่วนต่าง</div>
+                <div class="kii-value" id="bioValDiff">—<span class="unit">ล้านลิตร/วัน</span></div>
+                <div class="kii-subtext">เทียบเดือนก่อนหน้า</div>
+              </div>
+              <div class="kpi-trend pos" id="bioTrendDiff"><i class="fa-solid fa-arrow-up"></i> <span>—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="fuel-panel-body">
+          <!-- MAIN TREND CHART — Small Multiples -->
+          <div class="chart-card">
+            <div class="chart-card-head">
+              <div class="cc-title"><i class="fa-solid fa-chart-line"></i> แนวโน้มการผลิตและการใช้ไบโอดีเซล</div>
+              <div class="chart-card-head-actions">
+                <button class="chart-expand-btn" data-expand="bio.main" type="button" aria-label="ขยายกราฟ" title="ขยายกราฟ"><i class="fa-solid fa-expand"></i></button>
+                <div class="chart-type-toggle" data-chart="bio.main">
+                  <button class="ctt-btn ctt-btn--active" data-type="line" type="button" aria-label="กราฟเส้น" title="กราฟเส้น"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></button>
+                  <button class="ctt-btn" data-type="bar" type="button" aria-label="กราฟแท่ง" title="กราฟแท่ง"><i class="fa-solid fa-chart-column" aria-hidden="true"></i></button>
+                </div>
+              </div>
+            </div>
+            <div class="cc-sub" id="bioChartSub">หน่วย: ล้านลิตร/วัน · รายเดือน</div>
+            <div class="year-pills" id="bioYearPills"></div>
+            <div class="chart-canvas chart-canvas--main">
+              <canvas id="bioMainChart"></canvas>
+            </div>
+          </div>
+
+          <!-- SECONDARY : Yearly + Monthly -->
+          <div class="fp-charts-2col">
+            <div class="chart-card">
+              <div class="chart-card-head">
+                <div class="cc-title"><i class="fa-solid fa-chart-column"></i> การผลิตรายปี vs การใช้รายปี</div>
+                <button class="chart-expand-btn" data-expand="bio.year" type="button" aria-label="ขยายกราฟ" title="ขยายกราฟ"><i class="fa-solid fa-expand"></i></button>
+              <div class="chart-type-toggle" data-chart="bio.year">
+                  <button class="ctt-btn" data-type="line" type="button" aria-label="กราฟเส้น" title="กราฟเส้น"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></button>
+                  <button class="ctt-btn ctt-btn--active" data-type="bar" type="button" aria-label="กราฟแท่ง" title="กราฟแท่ง"><i class="fa-solid fa-chart-column" aria-hidden="true"></i></button>
+                </div>
+              </div>
+              <div class="cc-sub">หน่วย: ล้านลิตร/วัน · เฉลี่ยตามช่วงเดือนที่เลือก</div>
+              <div class="chart-canvas" style="min-height:240px;">
+                <canvas id="bioYearChart"></canvas>
+              </div>
+            </div>
+            <div class="chart-card">
+              <div class="chart-card-head">
+                <div class="cc-title"><i class="fa-solid fa-chart-simple"></i> ภาพรวมรายเดือนของช่วงปีที่เลือก</div>
+                <div class="cc-head-right">
+                  <select class="month-year-select" id="bioMonthYear" aria-label="เลือกปี"></select>
+                  <button class="chart-expand-btn" data-expand="bio.month" type="button" aria-label="ขยายกราฟ" title="ขยายกราฟ"><i class="fa-solid fa-expand"></i></button>
+              <div class="chart-type-toggle" data-chart="bio.month">
+                    <button class="ctt-btn" data-type="line" type="button" aria-label="กราฟเส้น" title="กราฟเส้น"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></button>
+                    <button class="ctt-btn ctt-btn--active" data-type="bar" type="button" aria-label="กราฟแท่ง" title="กราฟแท่ง"><i class="fa-solid fa-chart-column" aria-hidden="true"></i></button>
+                  </div>
+                </div>
+              </div>
+              <div class="cc-sub" id="bioMonthSub">หน่วย: ล้านลิตร/วัน · เลือกปีได้</div>
+              <div class="chart-canvas" style="min-height:240px;">
+                <canvas id="bioMonthChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================= DATA TABLE (กลาง ด้านล่าง) ========================= -->
+    <section id="section-table">
+      <div class="section-head">
+        <div>
+          <h2><i class="fa-solid fa-table"></i> ผลการดำเนินงานรายเดือน</h2>
+          <div class="section-sub" id="tableSub">คลิกหัวคอลัมน์เพื่อเรียงลำดับ · ค้นหาได้</div>
+        </div>
+        <div class="section-tag"><i class="fa-solid fa-arrows-rotate"></i> อัปเดตอัตโนมัติ</div>
+      </div>
+      <div class="table-toolbar">
+        <div class="table-tabs" id="tableTabs">
+          <button class="tab-btn tab-btn--active" data-filter="all">ทั้งหมด</button>
+          <button class="tab-btn" data-filter="eth">เอทานอล</button>
+          <button class="tab-btn" data-filter="bio">ไบโอดีเซล</button>
+        </div>
+        <div class="table-search">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" id="tableSearchInput" placeholder="ค้นหาเดือน / ปี...">
+        </div>
+      </div>
+      <div class="table-wrapper" id="dataTableWrapper">
+        <table class="data-table" id="monthlyPerformanceTable">
+          <thead>
+            <tr>
+              <th>เดือน</th>
+              <th>ปี</th>
+              <th>ประเภท</th>
+              <th>การผลิต</th>
+              <th>การใช้</th>
+              <th>Supply Gap</th>
+            </tr>
+          </thead>
+          <tbody id="monthlyTableBody">
+            <tr><td colspan="6" class="loading-row">กำลังโหลดข้อมูล...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ============================= FOOTER ============================= -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-col">
+        <div class="footer-brand"><i class="fa-solid fa-leaf"></i> Biofuel Analytics Dashboard</div>
+        <div class="footer-desc">ระบบวิเคราะห์ข้อมูลเชื้อเพลิงชีวภาพประเทศไทย</div>
+      </div>
+      <div class="footer-col">
+        <div class="footer-heading">แหล่งข้อมูล</div>
+        <div class="footer-info"><i class="fa-solid fa-database"></i> กรมธุรกิจพลังงาน (DOEB)</div>
+        <div class="footer-info"><i class="fa-solid fa-file-csv"></i> 4 ไฟล์ CSV สถิติอย่างเป็นทางการ</div>
+      </div>
+      <div class="footer-col">
+        <div class="footer-heading">ข้อมูลระบบ</div>
+        <div class="footer-info"><i class="fa-solid fa-code-branch"></i> Dashboard v5.0</div>
+        <div class="footer-info"><i class="fa-solid fa-clock"></i> อัปเดต: <span id="footerLastUpdate">—</span></div>
+        <div class="footer-info"><i class="fa-solid fa-calendar-days"></i> ช่วงข้อมูล: <span id="footerCoverage">—</span></div>
+        <div class="footer-info"><i class="fa-solid fa-database"></i> รายการข้อมูล: <span id="footerRecords">—</span></div>
+      </div>
+      <div class="footer-col">
+        <div class="footer-heading">ผู้พัฒนา</div>
+        <div class="footer-info"><i class="fa-solid fa-building"></i> นักศึกษาฝึกงาน</div>
+        <div class="footer-info"><i class="fa-solid fa-chart-line"></i> Chart.js 4.4.1</div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2569 Biofuel Analytics. สงวนลิขสิทธิ์</span>
+      <span>หน่วย: ล้านลิตร/วัน | ข้อมูลจริงจากระบบ</span>
+    </div>
+  </footer>
+
+  <!-- ============================= CHART EXPAND MODAL ============================= -->
+  <div class="chart-modal-overlay" id="chartModalOverlay" aria-hidden="true">
+    <div class="chart-modal" role="dialog" aria-modal="true" aria-labelledby="chartModalTitle">
+      <div class="chart-modal-head">
+        <div>
+          <div class="chart-modal-title" id="chartModalTitle"><i class="fa-solid fa-chart-line"></i> <span id="chartModalTitleText">แนวโน้ม</span></div>
+          <div class="chart-modal-sub" id="chartModalSub">หน่วย: ล้านลิตร/วัน</div>
+        </div>
+        <div class="chart-modal-head-right">
+          <div class="chart-type-toggle" id="chartModalToggle">
+            <button class="ctt-btn" data-type="line" type="button" aria-label="กราฟเส้น" title="กราฟเส้น"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></button>
+            <button class="ctt-btn" data-type="bar" type="button" aria-label="กราฟแท่ง" title="กราฟแท่ง"><i class="fa-solid fa-chart-column" aria-hidden="true"></i></button>
+          </div>
+          <button class="chart-modal-close" id="chartModalClose" type="button" aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+      <div class="chart-modal-year-pills" id="chartModalYearPills"></div>
+      <div class="chart-modal-body">
+        <canvas id="chartModalCanvas"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-modal-overlay" id="aiModalOverlay" aria-hidden="true">
+    <div class="ai-modal" role="dialog" aria-modal="true" aria-labelledby="aiModalTitle">
+      <div class="ai-modal-header">
+        <div class="ai-modal-header-copy">
+          <div class="ai-modal-title" id="aiModalTitle">
+            <span class="ai-modal-title-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18">
+                <defs>
+                  <linearGradient id="geminiGradModal" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#4285F4"/>
+                    <stop offset="35%" stop-color="#9B72CB"/>
+                    <stop offset="70%" stop-color="#D96BA8"/>
+                    <stop offset="100%" stop-color="#4FC3F7"/>
+                  </linearGradient>
+                </defs>
+                <path fill="url(#geminiGradModal)" d="M12 2c0 5.523-4.477 10-10 10 5.523 0 10 4.477 10 10 0-5.523 4.477-10 10-10-5.523 0-10-4.477-10-10z"/>
+              </svg>
+            </span>
+            Gemini AI
+          </div>
+          <div class="ai-modal-subtitle">AI-generated analysis · วิเคราะห์ข้อมูลจาก Dashboard ตาม Filter ปัจจุบัน</div>
+        </div>
+        <div class="ai-modal-meta">
+          <div class="ai-model-badge">Model: Gemini Flash</div>
+        </div>
+        <button class="ai-modal-close" id="aiModalClose" type="button" aria-label="ปิด"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="ai-modal-content" id="aiModalContent">
+        <div class="ai-loading">
+          <span class="ai-loading-spinner"></span>
+          <span>Gemini กำลังวิเคราะห์ข้อมูล...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<!-- Dashboard image export -->
+<script src="https://cdn.jsdelivr.net/npm/dom-to-image-more@3.6.0/dist/dom-to-image-more.min.js"></script>
+<!-- DataStore -->
+<script src="data.js"></script>
+<!-- Interactive Charts -->
+<script src="charts.js"></script>
+<script src="ai.js"></script>
+<script>
+document.getElementById('fullscreenBtn')?.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen();
+  }
+});
+
+document.getElementById('exportDashboardBtn')?.addEventListener('click', () => {
+  const button = document.getElementById('exportDashboardBtn');
+  const dashboard = document.querySelector('.main');
+  if (!button || !dashboard || !window.domtoimage) return;
+
+  const originalContent = button.innerHTML;
+  button.disabled = true;
+  button.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>กำลัง Export...</span>';
+
+  const exportWidth = dashboard.scrollWidth;
+  const exportHeight = dashboard.scrollHeight;
+  window.domtoimage.toPng(dashboard, {
+    bgcolor: '#F7FAF8',
+    width: exportWidth * 2,
+    height: exportHeight * 2,
+    style: {
+      transform: 'scale(2)',
+      transformOrigin: 'top left',
+      width: `${exportWidth}px`,
+      height: `${exportHeight}px`
+    }
+  }).then((dataUrl) => {
+    const link = document.createElement('a');
+    const reportDate = new Date().toISOString().slice(0, 10);
+    link.download = `Biofuel-Analytics-Dashboard-${reportDate}.png`;
+    link.href = dataUrl;
+    link.click();
+  }).catch(() => {
+    window.alert('ไม่สามารถส่งออกแดชบอร์ดได้ กรุณาลองใหม่อีกครั้ง');
+  }).finally(() => {
+    button.disabled = false;
+    button.innerHTML = originalContent;
+  });
+});
+</script>
+</body>
+</html>
