@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="th" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biofuel Analytics</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #050D0A;
+            --bg-secondary: #071712;
+            --bg-tertiary: #0A2018;
+            --bg-quaternary: #0D2A21;
+            --surface: rgba(255, 255, 255, 0.06);
+            --surface-hover: rgba(255, 255, 255, 0.10);
+            --text-primary: #F0F4F2;
+            --text-secondary: #A8B5AF;
+            --text-tertiary: #6B7D75;
+            --border: rgba(255, 255, 255, 0.14);
+            --border-hover: rgba(255, 255, 255, 0.22);
+            --green: #00B878;
+            --green-bright: #16C784;
+            --green-glow: #39E6A5;
+            --teal: #159B78;
+            --gold: #C58A16;
+            --gold-bright: #E2A93B;
+            --gold-glow: #F3C45E;
+            --shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+            --shadow-hover: 0 25px 70px rgba(0, 0, 0, 0.35);
+        }
+
+        [data-theme="light"] {
+            --bg-primary: #F4F8F6;
+            --bg-secondary: #E8F0EC;
+            --bg-tertiary: #DCE8E2;
+            --bg-quaternary: #D0E0D8;
+            --surface: rgba(255, 255, 255, 0.75);
+            --surface-hover: rgba(255, 255, 255, 0.90);
+            --text-primary: #0A1F16;
+            --text-secondary: #3D5A4D;
+            --text-tertiary: #6B8A7A;
+            --border: rgba(0, 0, 0, 0.08);
+            --border-hover: rgba(0, 0, 0, 0.15);
+            --green: #11875D;
+            --green-bright: #159B78;
+            --green-glow: #39E6A5;
+            --teal: #159B78;
+            --gold: #B47B13;
+            --gold-bright: #D4A030;
+            --gold-glow: #F3C45E;
+            --shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+            --shadow-hover: 0 15px 50px rgba(0, 0, 0, 0.12);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Mitr', 'Sarabun', 'Plus Jakarta Sans', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+            transition: background 0.4s ease, color 0.4s ease;
+        }
+
+        .bg-system {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .bg-deep {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse at 20% 0%, var(--bg-secondary) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 100%, var(--bg-tertiary) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, var(--bg-quaternary) 0%, transparent 70%);
+        }
+
+        .bg-glow-green {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 184, 120, 0.15) 0%, transparent 70%);
+            top: -200px;
+            left: -100px;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .bg-glow-gold {
+            position: absolute;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(197, 138, 22, 0.12) 0%, transparent 70%);
+            bottom: -150px;
+            right: -100px;
+            animation: float 10s ease-in-out infinite reverse;
+        }
+
+        .bg-glow-teal {
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(21, 155, 120, 0.10) 0%, transparent 70%);
+            top: 40%;
+            left: 60%;
+            animation: float 12s ease-in-out infinite 2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.05); }
+            66% { transform: translate(-20px, 20px) scale(0.95); }
+        }
+
+        .energy-lines {
+            position: absolute;
+            inset: 0;
+            opacity: 0.4;
+        }
+
+        .energy-line {
+            position: absolute;
+            height: 1px;
+            opacity: 0.3;
+        }
+
+        .energy-line:nth-child(1) {
+            width: 60%;
+            top: 20%;
+            left: -10%;
+            background: linear-gradient(90deg, transparent, var(--green), transparent);
+            transform: rotate(-3deg);
+            animation: drift 15s ease-in-out infinite;
+        }
+
+        .energy-line:nth-child(2) {
+            width: 50%;
+            top: 45%;
+            right: -5%;
+            background: linear-gradient(90deg, transparent, var(--teal), transparent);
+            transform: rotate(2deg);
+            animation: drift 18s ease-in-out infinite reverse;
+        }
+
+        .energy-line:nth-child(3) {
+            width: 70%;
+            top: 70%;
+            left: -5%;
+            background: linear-gradient(90deg, transparent, var(--gold), transparent);
+            opacity: 0.2;
+            transform: rotate(-1deg);
+            animation: drift 20s ease-in-out infinite 3s;
+        }
+
+        @keyframes drift {
+            0%, 100% { transform: translateX(0) rotate(var(--r, 0deg)); }
+            50% { transform: translateX(30px) rotate(var(--r, 0deg)); }
+        }
+
+        .data-grid {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+        }
+
+        [data-theme="light"] .data-grid {
+            background-image:
+                linear-gradient(rgba(0,0,0,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,0,0,0.03) 1px, transparent 1px);
+        }
+
+        .particles {
+            position: absolute;
+            inset: 0;
+        }
+
+        .particle {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: var(--green);
+            opacity: 0.4;
+            animation: particle-float 20s ease-in-out infinite;
+        }
+
+        .particle:nth-child(1) { top: 15%; left: 20%; animation-delay: 0s; }
+        .particle:nth-child(2) { top: 25%; left: 70%; background: var(--gold); animation-delay: 3s; }
+        .particle:nth-child(3) { top: 60%; left: 30%; animation-delay: 7s; }
+        .particle:nth-child(4) { top: 80%; left: 80%; background: var(--teal); animation-delay: 11s; }
+        .particle:nth-child(5) { top: 40%; left: 50%; background: var(--gold); animation-delay: 15s; }
+        .particle:nth-child(6) { top: 10%; left: 90%; animation-delay: 5s; }
+
+        @keyframes particle-float {
+            0%, 100% { transform: translate(0, 0); opacity: 0.2; }
+            25% { transform: translate(20px, -30px); opacity: 0.5; }
+            50% { transform: translate(-10px, -60px); opacity: 0.3; }
+            75% { transform: translate(30px, -20px); opacity: 0.4; }
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0;
+            position: relative;
+            z-index: 100;
+            background: transparent;
+            backdrop-filter: none;
+            -webkit-backdrop-filter: none;
+            border-bottom: none;
+            transition: background 0.4s ease, border-color 0.4s ease;
+            height: 0;
+            overflow: visible;
+        }
+
+        [data-theme="light"] .navbar {
+            background: rgba(244, 248, 246, 0.7);
+        }
+
+        .brand { display: flex; align-items: center; }
+        .brand-logo { width: 36px; height: 36px; }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-left: 0;
+            position: fixed;
+            top: 14px;
+            right: 18px;
+            z-index: 200;
+        }
+
+        .theme-toggle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 1px solid var(--border);
+            background: var(--surface);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+        }
+
+        .theme-toggle:hover {
+            background: var(--surface-hover);
+            border-color: var(--border-hover);
+            transform: scale(1.05);
+        }
+
+        .theme-toggle:focus-visible {
+            outline: 2px solid var(--green);
+            outline-offset: 2px;
+        }
+
+        .theme-toggle svg { width: 20px; height: 20px; }
+
+        .icon-moon { display: block; }
+        .icon-sun { display: none; }
+        [data-theme="light"] .icon-moon { display: none; }
+        [data-theme="light"] .icon-sun { display: block; }
+
+        .lang-switch {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--surface);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            font-size: 0.85rem;
+            font-weight: 600;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-secondary);
+        }
+
+        .lang-switch .active { color: var(--text-primary); }
+        .lang-switch span:not(.active):not(.divider) {
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .lang-switch span:not(.active):not(.divider):hover { color: var(--green); }
+        .lang-switch .divider { opacity: 0.4; cursor: default; }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 3rem 2rem 4rem;
+            position: relative;
+            z-index: 5;
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 3.5rem;
+        }
+
+        .hero-title {
+            font-family: 'Mitr', 'Plus Jakarta Sans', sans-serif;
+            font-size: clamp(2.6rem, 6vw, 5rem);
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            letter-spacing: -0.3px;
+            line-height: 1.05;
+        }
+
+        .hero-title .gradient-text {
+            background: linear-gradient(135deg, var(--green) 0%, var(--green-bright) 50%, var(--teal) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-title .plain-text { color: var(--text-primary); }
+
+        .hero-subtitle {
+            font-family: 'Sarabun', sans-serif;
+            font-size: clamp(1rem, 2.5vw, 1.35rem);
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-bottom: 1.25rem;
+        }
+
+        .accent-line {
+            width: 48px;
+            height: 3px;
+            background: linear-gradient(90deg, var(--green), var(--green-bright));
+            border-radius: 2px;
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-header h2 {
+            font-family: 'Sarabun', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .section-header p {
+            font-size: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: var(--surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 2.5rem 2rem;
+            text-align: center;
+            position: relative;
+            box-shadow: var(--shadow);
+            transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--border-hover);
+        }
+
+        .card-quantity:hover {
+            box-shadow: 0 25px 70px rgba(0, 184, 120, 0.15), var(--shadow-hover);
+        }
+
+        .card-price:hover {
+            box-shadow: 0 25px 70px rgba(197, 138, 22, 0.12), var(--shadow-hover);
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 1.25rem;
+            right: 1.25rem;
+            padding: 0.35rem 0.85rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: 'Sarabun', sans-serif;
+        }
+
+        .card-quantity .card-badge {
+            background: rgba(0, 184, 120, 0.15);
+            color: var(--green-bright);
+            border: 1px solid rgba(0, 184, 120, 0.2);
+        }
+
+        .card-price .card-badge {
+            background: rgba(197, 138, 22, 0.15);
+            color: var(--gold-bright);
+            border: 1px solid rgba(197, 138, 22, 0.2);
+        }
+
+        .card-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+
+        .card-icon-wrapper {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1.5rem;
+            position: relative;
+            transition: transform 0.35s ease;
+        }
+
+        .card:hover .card-icon-wrapper { transform: scale(1.04); }
+
+        .card-quantity .card-icon-wrapper {
+            background: linear-gradient(135deg, rgba(0, 184, 120, 0.15), rgba(21, 155, 120, 0.08));
+            box-shadow: 0 0 30px rgba(0, 184, 120, 0.1);
+        }
+
+        .card-price .card-icon-wrapper {
+            background: linear-gradient(135deg, rgba(197, 138, 22, 0.15), rgba(226, 169, 59, 0.08));
+            box-shadow: 0 0 30px rgba(197, 138, 22, 0.08);
+        }
+
+        .card-icon { width: 36px; height: 36px; }
+        .card-price .card-icon { width: 44px; height: 44px; }
+        .card-price .card-icon path { stroke-width: 2.4; }
+        .card-quantity .card-icon { color: var(--green-bright); }
+        .card-price .card-icon { color: var(--gold-bright); }
+
+        .card-title {
+            font-family: 'Plus Jakarta Sans', 'Mitr', 'Sarabun', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            letter-spacing: 0;
+            line-height: 1.18;
+        }
+
+        /* All card titles use the same font and sizing (see .card-title) */
+
+        .card-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.75rem;
+            line-height: 1.5;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            height: 54px;
+            padding: 0 2.25rem;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: 'Sarabun', sans-serif;
+            border: 1.5px solid currentColor;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+            min-width: 220px;
+            background: rgba(255,255,255,0.035);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+
+        .btn-primary {
+            color: var(--green-glow);
+            border-color: var(--green-glow);
+            box-shadow: 0 0 12px rgba(57,230,165,0.22), inset 0 0 14px rgba(57,230,165,0.04);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px) scale(1.015);
+            background: rgba(22,199,132,0.12);
+            box-shadow: 0 0 24px rgba(57,230,165,0.48), 0 0 55px rgba(57,230,165,0.20), inset 0 0 22px rgba(57,230,165,0.08);
+        }
+
+        .btn-primary:focus-visible {
+            outline: 2px solid var(--green-glow);
+            outline-offset: 3px;
+        }
+
+        .btn-gold {
+            color: var(--gold-glow);
+            border-color: var(--gold-glow);
+            box-shadow: 0 0 12px rgba(243,196,94,0.22), inset 0 0 14px rgba(243,196,94,0.04);
+        }
+
+        .btn-gold:hover:not(:disabled) {
+            transform: translateY(-3px) scale(1.015);
+            background: rgba(226,169,59,0.12);
+            box-shadow: 0 0 24px rgba(243,196,94,0.48), 0 0 55px rgba(243,196,94,0.20), inset 0 0 22px rgba(243,196,94,0.08);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            filter: grayscale(0.3);
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+            transition: transform 0.3s ease;
+        }
+
+        .btn:hover:not(:disabled) svg { transform: translateX(3px); }
+
+        .status-note {
+            display: block;
+            margin-top: 0.875rem;
+            font-size: 0.85rem;
+            color: var(--gold-bright);
+            font-weight: 500;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            position: relative;
+            z-index: 5;
+        }
+
+        .footer-divider {
+            max-width: 800px;
+            margin: 0 auto 1.5rem;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, var(--border), transparent);
+        }
+
+        .footer-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .copyright {
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        @media (max-width: 768px) {
+            .navbar { padding: 1rem 1.5rem; }
+            .container { padding: 2rem 1.25rem 3rem; }
+            .hero { margin-bottom: 2.5rem; }
+            .card-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+            .card { padding: 2rem 1.5rem; }
+            .btn { width: 100%; max-width: 280px; }
+        }
+
+        @media (max-width: 480px) {
+            .header-actions { gap: 0.75rem; }
+            .lang-switch { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+            .theme-toggle { width: 36px; height: 36px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-system">
+        <div class="bg-deep"></div>
+        <div class="bg-glow-green"></div>
+        <div class="bg-glow-gold"></div>
+        <div class="bg-glow-teal"></div>
+        <div class="energy-lines">
+            <div class="energy-line" style="--r: -3deg"></div>
+            <div class="energy-line" style="--r: 2deg"></div>
+            <div class="energy-line" style="--r: -1deg"></div>
+        </div>
+        <div class="data-grid"></div>
+        <div class="particles">
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+            <div class="particle"></div>
+        </div>
+    </div>
+
+    <header class="navbar">
+        <div class="header-actions">
+            <button class="theme-toggle" id="themeToggle" aria-label="สลับธีมมืด/สว่าง">
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+                </svg>
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+            </button>
+            
+        </div>
+    </header>
+
+    <main class="container">
+        <section class="hero">
+            <h1 class="hero-title">
+                <span class="gradient-text">วิเคราะห์</span> <span class="plain-text">เชื้อเพลิงชีวภาพ</span>
+            </h1>
+            <p class="hero-subtitle">ระบบวิเคราะห์ข้อมูลเชื้อเพลิงชีวภาพ</p>
+            <div class="accent-line"></div>
+        </section>
+
+        <section class="selection-section">
+            <div class="section-header">
+                <h2>เลือก Dashboard</h2>
+                <p>เข้าถึงข้อมูลได้รวดเร็ว และเข้าใจง่าย</p>
+            </div>
+
+            <div class="card-grid">
+                <div class="card card-quantity">
+                    <div class="card-badge">พร้อมใช้งาน</div>
+                    <div class="card-icon-wrapper">
+                        <!-- Bar chart icon for quantity -->
+                        <svg class="card-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="3" y="9" width="4" height="12" rx="1"></rect>
+                            <rect x="10" y="5" width="4" height="16" rx="1"></rect>
+                            <rect x="17" y="2" width="4" height="19" rx="1"></rect>
+                        </svg>
+                    </div>
+                    <h3 class="card-title">Dashboard ปริมาณ</h3>
+                    <p class="card-desc">เอทานอล และไบโอดีเซล</p>
+                    <a id="btnQuantity" class="btn btn-primary" href="https://sivakorn16w-droid.github.io/Quantity-Dashboard/" target="_blank" rel="noopener noreferrer">
+                        <span>เข้าสู่ Dashboard</span>
+                    </a>
+                </div>
+
+                <div class="card card-price">
+                    <div class="card-badge">พร้อมใช้งาน</div>
+                    <div class="card-icon-wrapper">
+                        <!-- Clean price trend icon -->
+                        <svg class="card-icon price-trend-icon" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                            <path d="M6 24V8" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+                            <path d="M6 24H27" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"/>
+                            <path d="M9 19L15 13L20 16L26 9" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="26" cy="9" r="2.2" fill="currentColor"/>
+                            <rect x="9" y="20" width="3" height="4" rx="1" fill="currentColor" opacity=".75"/>
+                            <rect x="14" y="18" width="3" height="6" rx="1" fill="currentColor" opacity=".75"/>
+                            <rect x="19" y="19" width="3" height="5" rx="1" fill="currentColor" opacity=".75"/>
+                        </svg>
+                    </div>
+                    <h3 class="card-title">Dashboard ราคา</h3>
+                    <p class="card-desc">เอทานอล และไบโอดีเซล</p>
+                    <a id="btnPrice" class="btn btn-gold" href="https://sivakorn16w-droid.github.io/Price-Dashboard/" target="_blank" rel="noopener noreferrer">
+                        <span>เข้าสู่ Dashboard</span>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-divider"></div>
+        <div class="footer-content">
+            <p class="footer-title">Biofuel Analytics</p>
+            <p class="copyright">&copy; 2026 EPPO</p>
+        </div>
+    </footer>
+
+    <script>
+        const QUANTITY_DASHBOARD_URL = "https://sivakorn16w-droid.github.io/Quantity-Dashboard/";
+        const PRICE_DASHBOARD_URL = "https://sivakorn16w-droid.github.io/Price-Dashboard/";
+
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        let isDark = true;
+
+        themeToggle.addEventListener('click', () => {
+            isDark = !isDark;
+            html.setAttribute('data-theme', isDark ? 'dark' : 'light');
+        });
+
+        // Language switch removed — no JS needed here
+
+        const btnQuantity = document.getElementById('btnQuantity');
+        if (btnQuantity) btnQuantity.href = QUANTITY_DASHBOARD_URL;
+
+        const btnPrice = document.getElementById('btnPrice');
+        if (btnPrice) btnPrice.href = PRICE_DASHBOARD_URL;
+    </script>
+</body>
+</html>
