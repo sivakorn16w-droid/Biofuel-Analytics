@@ -622,6 +622,164 @@
                 transition-duration: 0.01ms !important;
             }
         }
+
+        /* ─── PDF Floating Button ─── */
+        .pdf-fab-wrapper {
+            position: fixed;
+            left: 28px;
+            bottom: 28px;
+            z-index: 9999;
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .pdf-fab {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1.5px solid rgba(255, 255, 255, 0.20);
+            box-shadow:
+                0 6px 24px rgba(176, 0, 0, 0.40),
+                0 0 0 0 rgba(220, 38, 38, 0.45),
+                inset 0 1px 0 rgba(255,255,255,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.22s ease, box-shadow 0.22s ease, background 0.22s ease;
+            animation: pdf-pulse 2.6s ease-out infinite;
+            position: relative;
+            flex-shrink: 0;
+            overflow: hidden;
+            padding: 14px;
+        }
+
+        @keyframes pdf-pulse {
+            0%   { box-shadow: 0 6px 24px rgba(176,0,0,0.55), 0 0 0 0 rgba(220,38,38,0.45); }
+            60%  { box-shadow: 0 6px 24px rgba(176,0,0,0.55), 0 0 0 14px rgba(220,38,38,0); }
+            100% { box-shadow: 0 6px 24px rgba(176,0,0,0.55), 0 0 0 0 rgba(220,38,38,0); }
+        }
+
+        .pdf-fab:hover {
+            transform: scale(1.10);
+            background: rgba(255, 255, 255, 0.14);
+            box-shadow:
+                0 10px 36px rgba(176, 0, 0, 0.55),
+                0 0 28px rgba(220, 38, 38, 0.40),
+                inset 0 1px 0 rgba(255,255,255,0.20);
+            animation: none;
+        }
+
+        .pdf-fab:active {
+            transform: scale(0.96);
+            box-shadow: 0 4px 14px rgba(176, 0, 0, 0.60);
+        }
+
+        /* PDF icon inside button */
+        .pdf-fab-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 1px;
+            pointer-events: none;
+        }
+
+        .pdf-fab-icon svg {
+            width: 30px;
+            height: 30px;
+        }
+
+        .pdf-fab-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .pdf-fab-label {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            color: #fff;
+            line-height: 1;
+            margin-top: 1px;
+        }
+
+        /* Tooltip */
+        .pdf-fab-tooltip {
+            position: absolute;
+            left: calc(100% + 14px);
+            bottom: 50%;
+            transform: translateY(50%) translateX(-6px);
+            background: rgba(8, 22, 16, 0.88);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            padding: 10px 14px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            box-shadow: 0 8px 28px rgba(0,0,0,0.45);
+        }
+
+        .pdf-fab-wrapper:hover .pdf-fab-tooltip {
+            opacity: 1;
+            transform: translateY(50%) translateX(0);
+        }
+
+        .pdf-tooltip-title {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
+            display: block;
+        }
+
+        .pdf-tooltip-sub {
+            font-family: 'Sarabun', sans-serif;
+            font-size: 0.78rem;
+            color: rgba(168,181,175,0.9);
+            display: block;
+            margin-top: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .pdf-fab-wrapper {
+                left: 16px;
+                bottom: 16px;
+            }
+            .pdf-fab {
+                width: 64px;
+                height: 64px;
+                padding: 12px;
+            }
+            .pdf-fab-icon svg {
+                width: 25px;
+                height: 25px;
+            }
+            .pdf-fab-label {
+                font-size: 9px;
+            }
+            .pdf-fab-tooltip {
+                left: auto;
+                right: calc(100% + 10px);
+                bottom: 50%;
+                transform: translateY(50%) translateX(6px);
+            }
+            .pdf-fab-wrapper:hover .pdf-fab-tooltip {
+                transform: translateY(50%) translateX(0);
+            }
+        }
     </style>
 </head>
 <body>
@@ -725,6 +883,19 @@
             <p class="copyright">&copy; 2026 EPPO</p>
         </div>
     </footer>
+
+    <!-- PDF to Excel Floating Button -->
+    <div class="pdf-fab-wrapper">
+        <a class="pdf-fab" href="https://sivakorn16w-droid.github.io/Web-PDF-to-Excel/" aria-label="PDF to Excel">
+            <div class="pdf-fab-icon">
+                <img src="app_logo.png" alt="" aria-hidden="true" draggable="false">
+            </div>
+        </a>
+        <div class="pdf-fab-tooltip">
+            <span class="pdf-tooltip-title">PDF to Excel</span>
+            <span class="pdf-tooltip-sub">แปลงไฟล์ PDF เป็น Excel</span>
+        </div>
+    </div>
 
     <script>
         const QUANTITY_DASHBOARD_URL = "https://sivakorn16w-droid.github.io/Quantity-Dashboard/";
